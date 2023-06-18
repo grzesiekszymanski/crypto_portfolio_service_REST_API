@@ -5,3 +5,4 @@ psycopg2-binary==2.9.6
 djangorestframework==3.14.0
 drf-spectacular==0.26.2
 flake8==6.0.0
+pre-commit==3.3.3
