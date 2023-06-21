@@ -9,3 +9,4 @@ repos:
     rev: 22.10.0
     hooks:
     -   id: black
+        exclude: ^(crypto_portfolio_service_REST_API/settings.py|crypto_portfolio_service_REST_API/urls.py)

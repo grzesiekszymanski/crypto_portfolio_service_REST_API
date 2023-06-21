@@ -11,6 +11,8 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'crypto_portfolio_service_REST_API.settings')
+os.environ.setdefault(
+    "DJANGO_SETTINGS_MODULE", "crypto_portfolio_service_REST_API.settings"
+)
 
 application = get_asgi_application()
