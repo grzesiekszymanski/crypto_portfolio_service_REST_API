@@ -35,3 +35,8 @@ class TestUserModel(TestCase):
             )
             expected_email = test_email[0:10] + normalized_email_fragment
             self.assertEqual(user.email, expected_email)
+
+    def test_empty_email_force_exception(self):
+        """Verify behavior when user entered empty email."""
+        with self.assertRaises(ValueError):
+            get_user_model().objects.create_user("", "user1", "test_password")
