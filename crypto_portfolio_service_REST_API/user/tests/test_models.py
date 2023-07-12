@@ -40,3 +40,14 @@ class TestUserModel(TestCase):
         """Verify behavior when user entered empty email."""
         with self.assertRaises(ValueError):
             get_user_model().objects.create_user("", "user1", "test_password")
+
+    def test_create_admin(self):
+        """Test created admin user."""
+        user = get_user_model().objects.create_admin(
+            email="test_admin@example.com",
+            username="admin_user",
+            password="admin_password",
+        )
+
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
