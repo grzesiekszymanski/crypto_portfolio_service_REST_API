@@ -8,8 +8,8 @@ class TestUserModel(TestCase):
     def test_create_user(self):
         """Test user was created successful."""
         email = "testemail@example.com"
-        username = "testusername"
-        password = "testpassword"
+        username = "test_username"
+        password = "test_password"
 
         user = get_user_model().objects.create_user(
             email=email, username=username, password=password
