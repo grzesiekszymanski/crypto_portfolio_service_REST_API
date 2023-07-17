@@ -11,6 +11,7 @@ from rest_framework import status
 
 TOKEN_URL = reverse("user:token")
 CREATE_USER_URL = reverse("user:create")
+ME_URL = reverse("user:me")
 PAYLOAD = {
     "email": "test_email@example.com",
     "username": "test_username",
@@ -92,3 +93,46 @@ class PublicUserApiTests(TestCase):
 
         self.assertNotIn("token", result.data)
         self.assertEqual(result.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class PrivateUserApiTests(TestCase):
+    """Test API requests that requires authentication."""
+
+    def setUp(self):
+        self.user = create_user(
+            email="test_email@example.com",
+            username="test_username",
+            password="test_password",
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_retrieve_profile_success(self):
+        """Test retrieving profile for logged in user."""
+        result = self.client.get(ME_URL)
+
+        self.assertEqual(result.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            result.data, {"email": self.user.email, "username": self.user.username}
+        )
+
+    def test_post_me_not_allowed(self):
+        """The POST is not allowed for the 'me' endpoint."""
+        result = self.client.post(ME_URL, {})
+
+        self.assertEqual(result.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_update_user_profile(self):
+        """Test updating the user profile fpr the authenticated user."""
+        payload = {
+            "username": "new_username",
+            "email": "new_email@example.com",
+            "password": "new_password",
+        }
+        result = self.client.patch(ME_URL, payload)
+        self.user.refresh_from_db()
+
+        self.assertEqual(self.user.username, payload["username"])
+        self.assertEqual(self.user.email, payload["email"])
+        self.assertTrue(self.user.check_password(payload["password"]))
+        self.assertEqual(result.status_code, status.HTTP_200_OK)
