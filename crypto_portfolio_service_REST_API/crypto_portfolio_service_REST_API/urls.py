@@ -31,4 +31,5 @@ urlpatterns = [
         SpectacularSwaggerView.as_view(url_name="api-schema"),
         name="api-docs",
     ),
+    path("crypto/", include("crypto_portfolio.urls")),
 ]
