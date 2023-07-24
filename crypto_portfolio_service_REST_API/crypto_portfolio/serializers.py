@@ -36,11 +36,21 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
 
         return price_in_usd
 
+    @staticmethod
+    def _calculate_worth_of_added_coin(coin_price_usd, amount):
+        """Calculate current worth of added cryptocurrency in USD."""
+        return coin_price_usd * amount
+
     def create(self, validated_data):
         """Create cryptocurrency in portfolio."""
+        # Get and calculate cryptocurrency parameters.
         user = self.context['request'].user
         coin_name = validated_data['name']
         coin_price_usd = self._get_coin_price(coin_name)
+        worth = self._calculate_worth_of_added_coin(coin_price_usd, validated_data['amount'])
+
+        # Set cryptocurrency parameters.
         validated_data['price'] = coin_price_usd
+        validated_data['worth'] = worth
 
         return Cryptocurrency.objects.create(user=user, **validated_data)
