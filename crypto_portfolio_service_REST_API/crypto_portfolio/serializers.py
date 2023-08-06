@@ -5,6 +5,7 @@ from pycoingecko import CoinGeckoAPI
 from rest_framework import serializers
 
 from .models import Cryptocurrency
+from user.models import User
 
 
 class CryptocurrencySerializer(serializers.ModelSerializer):
@@ -22,7 +23,7 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
             "profit_loss_24h",
             "profit_loss_percent_24h",
             "participation_in_portfolio",
-            "date",
+            "date"
         ]
 
     cg = CoinGeckoAPI()
@@ -42,7 +43,7 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
         return coin_price_usd * amount
 
     def create(self, validated_data):
-        """Create cryptocurrency in portfolio."""
+        """Create cryptocurrency in authenticated user portfolio."""
         # Get and calculate cryptocurrency parameters.
         user = self.context['request'].user
         coin_name = validated_data['name']
@@ -53,4 +54,4 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
         validated_data['price'] = coin_price_usd
         validated_data['worth'] = worth
 
-        return Cryptocurrency.objects.create(user=user, **validated_data)
+        user.crypto.create(**validated_data)

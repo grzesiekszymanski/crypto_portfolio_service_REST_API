@@ -11,7 +11,7 @@ class Cryptocurrency(models.Model):
     """This class represents simple cryptocurrency."""
 
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='crypto'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='crypto'
     )
     name = models.CharField(max_length=30)
     price = models.FloatField(default=None)

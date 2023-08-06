@@ -8,7 +8,7 @@ from . import views
 
 
 router = DefaultRouter()
-router.register("manage", views.CryptocurrencyViewSet)
+router.register("manage", views.CryptocurrencyViewSet, basename="manage")
 
 app_name = "crypto_portfolio"
 
