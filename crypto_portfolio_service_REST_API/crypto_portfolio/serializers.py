@@ -87,4 +87,4 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
             validated_data['worth'] = worth
             user.crypto.create(**validated_data)
 
-        return None
+        return Cryptocurrency
