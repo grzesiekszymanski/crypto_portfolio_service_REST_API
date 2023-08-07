@@ -36,9 +36,9 @@ def generate_payload():
     return payload
 
 
-def get_list_of_crypto_selected_user_portfolio():
+def get_list_of_crypto_selected_user_portfolio(user_index):
     """Return content of user cryptocurrency portfolio."""
-    return User.objects.all()[0].crypto.all()
+    return User.objects.all()[user_index].crypto.all()
 
 
 class NotAuthenticatedUserTests(TestCase):
@@ -71,7 +71,28 @@ class AuthenticatedUserTests(TestCase):
         """Test coin created successful by authenticated user."""
         payload = generate_payload()
         result = self.client.post(CREATE_COIN_URL, payload)
-        user_portfolio = get_list_of_crypto_selected_user_portfolio()
+        user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
 
         self.assertEqual(result.status_code, status.HTTP_201_CREATED)
         self.assertEqual(user_portfolio[0].name, payload['name'])
+
+    def test_created_coin_visible_only_for_author(self):
+        """Test created coin in portfolio is not visible for other users."""
+        payload = generate_payload()
+        result = self.client.post(CREATE_COIN_URL, payload)
+
+        # Create and force second user authentication.
+        user2 = create_user(
+            email='test_email2@example.com',
+            username='test_username2',
+            password='test_password2',
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=user2)
+
+        user1_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
+        user2_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=1)
+
+        self.assertEqual(result.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(user1_portfolio), 1)
+        self.assertEqual(len(user2_portfolio), 0)
