@@ -96,3 +96,15 @@ class AuthenticatedUserTests(TestCase):
         self.assertEqual(result.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(user1_portfolio), 1)
         self.assertEqual(len(user2_portfolio), 0)
+
+    def test_coin_duplication_not_possible(self):
+        """Test it is not possible to duplicate cryptocurrency in portfolio."""
+        payload = generate_payload()
+        result = self.client.post(CREATE_COIN_URL, payload)
+        result2 = self.client.post(CREATE_COIN_URL, payload)
+
+        user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
+
+        self.assertEqual(result.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(result2.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(user_portfolio), 1)

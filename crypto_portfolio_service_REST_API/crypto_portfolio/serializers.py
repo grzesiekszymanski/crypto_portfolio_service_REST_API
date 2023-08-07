@@ -74,10 +74,10 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
         # Set cryptocurrency parameters.
         if coin_name in portfolio_coins:
             coin_for_update = self._get_coin_for_update(user, coin_name)
-            coin_for_update.price = self._calculate_average_price(coin_for_update.price,
-                                                                  coin_price_usd,
-                                                                  coin_for_update.amount,
-                                                                  coin_amount)
+            coin_for_update.price = self._calculate_average_price(float(coin_for_update.price),
+                                                                  float(coin_price_usd),
+                                                                  float(coin_for_update.amount),
+                                                                  float(coin_amount))
             coin_for_update.amount += coin_amount
             coin_for_update.worth += worth
 
