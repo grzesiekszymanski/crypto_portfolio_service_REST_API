@@ -1,10 +1,5 @@
-from datetime import datetime
-
 from django.db import models
 from django.conf import settings
-
-
-# current_date_and_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
 
 class Cryptocurrency(models.Model):

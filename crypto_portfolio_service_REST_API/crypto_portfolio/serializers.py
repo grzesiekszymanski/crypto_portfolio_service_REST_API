@@ -1,7 +1,9 @@
 """
 Serializers for cryptocurrency portfolio.
 """
+from datetime import datetime
 from pycoingecko import CoinGeckoAPI
+
 from rest_framework import serializers
 
 from .models import Cryptocurrency
@@ -59,6 +61,11 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
         index = available_coins.index(coin_name)
         return user.crypto.all()[index]
 
+    @staticmethod
+    def _read_current_date_and_time():
+        """Return current date and time."""
+        return datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
     def create(self, validated_data):
         """Create cryptocurrency in authenticated user portfolio."""
         # Get and calculate cryptocurrency parameters.
@@ -80,6 +87,7 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
                                                                   float(coin_amount))
             coin_for_update.amount += coin_amount
             coin_for_update.worth += worth
+            coin_for_update.date = self._read_current_date_and_time()
 
             coin_for_update.save()
         else:
