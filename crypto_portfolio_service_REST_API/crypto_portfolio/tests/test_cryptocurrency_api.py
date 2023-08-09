@@ -222,12 +222,26 @@ class AuthenticatedUserTests(TestCase):
         self.assertEqual(portfolio_len_before_reset, len(coins_to_create))
         self.assertEqual(portfolio_len_after_reset, 0)
 
-    def test_incorrect_coin_name_error(self):
+    def test_incorrect_coin_name_delete_error(self):
         print(f"Started {'test_incorrect_coin_name_error'}")
-        """Test sending incorrect coin name returns bad request status."""
+        """Test sending incorrect coin name to delete returns bad request status."""
         payload = generate_payload('bitcoin', 2)
         result = self.client.post(CREATE_COIN_URL, payload)
         response = self.client.delete(f'{CREATE_COIN_URL}incorrect_name/')
 
         self.assertEqual(result.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_incorrect_coin_name_create_error(self):
+        print(f"Started {'test_incorrect_coin_name_create_error'}")
+        """Test sending incorrect coin name to create returns bad request status."""
+        payload = generate_payload('b_i_t_c_o_i_n', 2)
+        with self.assertRaises(Exception):
+            self.client.post(CREATE_COIN_URL, payload)
+
+    def test_incorrect_coin_amount_create_error(self):
+        print(f"Started {'test_incorrect_coin_amount_create_error'}")
+        """Test sending incorrect coin amount to create returns bad request status."""
+        payload = generate_payload('bitcoin', -2)
+        with self.assertRaises(Exception):
+            self.client.post(CREATE_COIN_URL, payload)

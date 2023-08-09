@@ -4,7 +4,8 @@ Serializers for cryptocurrency portfolio.
 from datetime import datetime
 from pycoingecko import CoinGeckoAPI
 
-from rest_framework import serializers
+from rest_framework import serializers, status
+from rest_framework.response import Response
 
 from .models import Cryptocurrency
 from user.models import User
@@ -42,11 +43,15 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
 
     def _get_coin_price(self, coin_name):
         """Get coin name and return it's current price in USD."""
+
         coin_string_formatted = coin_name.lower().strip()
         current_coin_price = self.cg.get_price(
             ids=coin_string_formatted, vs_currencies="usd"
         )
-        price_in_usd = current_coin_price[f"{coin_string_formatted}"]["usd"]
+        try:
+            price_in_usd = current_coin_price[f"{coin_string_formatted}"]["usd"]
+        except Exception:
+            raise Exception("Selected cryptocurrency wasn't found!")
 
         return float(price_in_usd)
 
@@ -58,7 +63,10 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
     @staticmethod
     def _calculate_worth_of_added_coin(coin_price_usd, amount):
         """Calculate current worth of added cryptocurrency in USD."""
-        return coin_price_usd * float(amount)
+        try:
+            return coin_price_usd * float(amount)
+        except Exception:
+            raise Exception("Entered coin amount can't be less than 0!")
 
     @staticmethod
     def _calculate_average_price(
@@ -86,37 +94,45 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create cryptocurrency in authenticated user portfolio."""
-        # Get and calculate cryptocurrency parameters.
-        user = self.context["request"].user
-        coin_name = validated_data["name"]
-        coin_amount = validated_data["amount"]
-        portfolio_coins = self._get_coin_names_from_portfolio(user)
+        try:
+            # Get and calculate cryptocurrency parameters.
+            user = self.context["request"].user
+            coin_name = validated_data["name"]
+            coin_amount = validated_data["amount"]
 
-        # Calculate coin properties.
-        coin_price_usd = self._get_coin_price(coin_name)
-        worth = self._calculate_worth_of_added_coin(
-            coin_price_usd, validated_data["amount"]
-        )
+            if float(coin_amount) < 0:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        # Set cryptocurrency parameters.
-        if coin_name in portfolio_coins:
-            coin_for_update = self._get_coin_for_update(user, coin_name)
-            coin_for_update.price = self._calculate_average_price(
-                float(coin_for_update.price),
-                float(coin_price_usd),
-                float(coin_for_update.amount),
-                float(coin_amount),
+            portfolio_coins = self._get_coin_names_from_portfolio(user)
+
+            # Calculate coin properties.
+            coin_price_usd = self._get_coin_price(coin_name)
+            worth = self._calculate_worth_of_added_coin(
+                coin_price_usd, validated_data["amount"]
             )
 
-            coin_for_update.amount = float(coin_for_update.amount) + float(coin_amount)
-            coin_for_update.worth = float(coin_for_update.worth) + float(worth)
-            coin_for_update.date = self._read_current_date_and_time()
+            # Set cryptocurrency parameters.
+            if coin_name in portfolio_coins:
+                coin_for_update = self._get_coin_for_update(user, coin_name)
+                coin_for_update.price = self._calculate_average_price(
+                    float(coin_for_update.price),
+                    float(coin_price_usd),
+                    float(coin_for_update.amount),
+                    float(coin_amount),
+                )
 
-            coin_for_update.save()
-        else:
-            validated_data["price"] = coin_price_usd
-            validated_data["worth"] = worth
-            validated_data["date"] = self._read_current_date_and_time()
-            user.crypto.create(**validated_data)
+                coin_for_update.amount = float(coin_for_update.amount) + float(coin_amount)
+                coin_for_update.worth = float(coin_for_update.worth) + float(worth)
+                coin_for_update.date = self._read_current_date_and_time()
 
-        return Cryptocurrency
+                coin_for_update.save()
+            else:
+                validated_data["price"] = coin_price_usd
+                validated_data["worth"] = worth
+                validated_data["date"] = self._read_current_date_and_time()
+                user.crypto.create(**validated_data)
+
+            return Cryptocurrency
+
+        except KeyError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
