@@ -129,3 +129,22 @@ class AuthenticatedUserTests(TestCase):
         for result in results:
             self.assertEqual(result.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(user_portfolio.all()), len(results))
+
+    def test_formatting_coin_name(self):
+        """Test size of letters or whitespaces do not have impact for searching coin."""
+        coin_name_variants = [
+            'bitcoin',
+            'BITCOIN',
+            'BiTcOiN',
+            'BITcoin',
+            ' bitcoin',
+            'BITCOIN '
+        ]
+        results = []
+
+        for coin_name in coin_name_variants:
+            payload = generate_payload(coin_name, 1)
+            results.append(self.client.post(CREATE_COIN_URL, payload))
+
+        for result in results:
+            self.assertEqual(result.status_code, status.HTTP_201_CREATED)

@@ -32,10 +32,12 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
 
     def _get_coin_price(self, coin_name):
         """Get coin name and return it's current price in USD."""
+        coin_string_formatted = coin_name.lower().strip()
+        print(f"coin_string_formatted: {coin_string_formatted}")
         current_coin_price = self.cg.get_price(
-            ids=coin_name.lower(), vs_currencies="usd"
+            ids=coin_string_formatted, vs_currencies="usd"
         )
-        price_in_usd = current_coin_price[f"{coin_name.lower()}"]["usd"]
+        price_in_usd = current_coin_price[f"{coin_string_formatted}"]["usd"]
 
         return float(price_in_usd)
 
