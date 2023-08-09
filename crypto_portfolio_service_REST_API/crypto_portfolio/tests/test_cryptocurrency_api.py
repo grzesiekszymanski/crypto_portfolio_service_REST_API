@@ -20,11 +20,11 @@ def create_user(**params):
     return get_user_model().objects.create_user(**params)
 
 
-def generate_payload():
+def generate_payload(coin_name: str, amount: float) -> dict:
     payload = {
-        "name": "bitcoin",
+        "name": coin_name,
         "price": "",
-        "amount": 3,
+        "amount": amount,
         "worth": "",
         "total_profit_loss": "",
         "total_profit_loss_percent": "",
@@ -49,7 +49,7 @@ class NotAuthenticatedUserTests(TestCase):
 
     def test_add_coin_not_authenticated_error(self):
         """Test return error if not authenticated user created coin."""
-        payload = generate_payload()
+        payload = generate_payload('bitcoin', 3.0)
         result = self.client.post(CREATE_COIN_URL, payload)
 
         self.assertEqual(result.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -69,7 +69,7 @@ class AuthenticatedUserTests(TestCase):
 
     def test_created_coin_successful(self):
         """Test coin created successful by authenticated user."""
-        payload = generate_payload()
+        payload = generate_payload('bitcoin', 3.0)
         result = self.client.post(CREATE_COIN_URL, payload)
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
 
@@ -78,7 +78,7 @@ class AuthenticatedUserTests(TestCase):
 
     def test_created_coin_visible_only_for_author(self):
         """Test created coin in portfolio is not visible for other users."""
-        payload = generate_payload()
+        payload = generate_payload('bitcoin', 3.0)
         result = self.client.post(CREATE_COIN_URL, payload)
 
         # Create and force second user authentication.
@@ -99,15 +99,33 @@ class AuthenticatedUserTests(TestCase):
 
     def test_coin_duplication_not_possible(self):
         """Test it is not possible to duplicate cryptocurrency in portfolio."""
-        payload = generate_payload()
+        payload = generate_payload('bitcoin', 3.0)
         result = self.client.post(CREATE_COIN_URL, payload)
         result2 = self.client.post(CREATE_COIN_URL, payload)
 
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
         total_amount = str(float(payload["amount"] + payload["amount"]))
-        print(user_portfolio[0].amount)
 
         self.assertEqual(result.status_code, status.HTTP_201_CREATED)
         self.assertEqual(result2.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(user_portfolio), 1)
         self.assertEqual(total_amount, user_portfolio[0].amount)
+
+    def test_created_multiple_coins_successful(self):
+        """Test coins created successful by authenticated user."""
+        coins_to_create = {
+            'bitcoin': 3.0,
+            'ethereum': 5.0,
+            'cardano': 40.0
+        }
+        results = []
+
+        for coin, amount in coins_to_create.items():
+            payload = generate_payload(coin, amount)
+            results.append(self.client.post(CREATE_COIN_URL, payload))
+
+        user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
+
+        for result in results:
+            self.assertEqual(result.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(user_portfolio.all()), len(results))

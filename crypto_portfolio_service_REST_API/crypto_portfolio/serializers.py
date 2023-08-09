@@ -37,12 +37,12 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
         )
         price_in_usd = current_coin_price[f"{coin_name.lower()}"]["usd"]
 
-        return price_in_usd
+        return float(price_in_usd)
 
     @staticmethod
     def _calculate_worth_of_added_coin(coin_price_usd, amount):
         """Calculate current worth of added cryptocurrency in USD."""
-        return coin_price_usd * amount
+        return coin_price_usd * float(amount)
 
     @staticmethod
     def _get_coin_names_from_portfolio(user):
