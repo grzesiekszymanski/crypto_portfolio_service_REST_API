@@ -148,3 +148,12 @@ class AuthenticatedUserTests(TestCase):
 
         for result in results:
             self.assertEqual(result.status_code, status.HTTP_201_CREATED)
+
+    def test_added_coin_with_amount_0(self):
+        """Test coin was added correctly after creation with amount 0."""
+        payload = generate_payload('bitcoin', 0)
+        result = self.client.post(CREATE_COIN_URL, payload)
+        user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
+
+        self.assertEqual(result.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(int(user_portfolio[0].amount), 0)
