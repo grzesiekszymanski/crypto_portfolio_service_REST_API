@@ -104,7 +104,10 @@ class AuthenticatedUserTests(TestCase):
         result2 = self.client.post(CREATE_COIN_URL, payload)
 
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
+        total_amount = str(float(payload['amount'] + payload['amount']))
+        print(user_portfolio[0].amount)
 
         self.assertEqual(result.status_code, status.HTTP_201_CREATED)
         self.assertEqual(result2.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(user_portfolio), 1)
+        self.assertEqual(total_amount, user_portfolio[0].amount)

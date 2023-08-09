@@ -85,8 +85,9 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
                                                                   float(coin_price_usd),
                                                                   float(coin_for_update.amount),
                                                                   float(coin_amount))
-            coin_for_update.amount += coin_amount
-            coin_for_update.worth += worth
+
+            coin_for_update.amount = float(coin_for_update.amount) + float(coin_amount)
+            coin_for_update.worth = float(coin_for_update.worth) + float(worth)
             coin_for_update.date = self._read_current_date_and_time()
 
             coin_for_update.save()
