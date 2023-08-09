@@ -106,6 +106,7 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
         else:
             validated_data["price"] = coin_price_usd
             validated_data["worth"] = worth
+            validated_data["date"] = self._read_current_date_and_time()
             user.crypto.create(**validated_data)
 
         return Cryptocurrency

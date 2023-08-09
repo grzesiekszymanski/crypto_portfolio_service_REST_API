@@ -1,6 +1,8 @@
 """
 Tests for the cryptocurrency API.
 """
+from datetime import datetime
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -39,6 +41,11 @@ def generate_payload(coin_name: str, amount: float) -> dict:
 def get_list_of_crypto_selected_user_portfolio(user_index):
     """Return content of user cryptocurrency portfolio."""
     return User.objects.all()[user_index].crypto.all()
+
+
+def read_current_date_and_time():
+    """Return current date and time."""
+    return datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
 
 class NotAuthenticatedUserTests(TestCase):
@@ -154,6 +161,17 @@ class AuthenticatedUserTests(TestCase):
         payload = generate_payload('bitcoin', 0)
         result = self.client.post(CREATE_COIN_URL, payload)
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
+        # print(user_portfolio[0].date)
 
         self.assertEqual(result.status_code, status.HTTP_201_CREATED)
         self.assertEqual(int(user_portfolio[0].amount), 0)
+
+    def test_correctness_of_date_and_time(self):
+        """Test date and time were added correctly."""
+        payload = generate_payload('bitcoin', 2)
+        result = self.client.post(CREATE_COIN_URL, payload)
+        user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
+        current_date_and_time = read_current_date_and_time()
+
+        self.assertEqual(result.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(user_portfolio[0].date, current_date_and_time)
