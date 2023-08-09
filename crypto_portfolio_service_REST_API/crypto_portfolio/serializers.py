@@ -27,6 +27,16 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
             "participation_in_portfolio",
             "date",
         ]
+        read_only_fields = [
+            'price',
+            'worth',
+            'total_profit_loss',
+            'total_profit_loss_percent',
+            'profit_loss_24h',
+            'profit_loss_percent_24h'
+            'participation_in_portfolio',
+            'date'
+        ]
 
     cg = CoinGeckoAPI()
 
@@ -41,14 +51,14 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
         return float(price_in_usd)
 
     @staticmethod
-    def _calculate_worth_of_added_coin(coin_price_usd, amount):
-        """Calculate current worth of added cryptocurrency in USD."""
-        return coin_price_usd * float(amount)
-
-    @staticmethod
     def _get_coin_names_from_portfolio(user):
         """Return coin list of already existing coins in selected user portfolio."""
         return [coin.name for coin in user.crypto.all()]
+
+    @staticmethod
+    def _calculate_worth_of_added_coin(coin_price_usd, amount):
+        """Calculate current worth of added cryptocurrency in USD."""
+        return coin_price_usd * float(amount)
 
     @staticmethod
     def _calculate_average_price(

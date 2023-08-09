@@ -11,7 +11,6 @@ from rest_framework.test import APIClient
 from rest_framework import status
 
 from user.models import User
-from crypto_portfolio.models import Cryptocurrency
 
 
 CREATE_COIN_URL = reverse("crypto_portfolio:manage-list")
@@ -55,6 +54,7 @@ class NotAuthenticatedUserTests(TestCase):
         self.client = APIClient()
 
     def test_add_coin_not_authenticated_error(self):
+        print(f"Started {'test_add_coin_not_authenticated_error'}")
         """Test return error if not authenticated user created coin."""
         payload = generate_payload('bitcoin', 3.0)
         result = self.client.post(CREATE_COIN_URL, payload)
@@ -75,6 +75,7 @@ class AuthenticatedUserTests(TestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_created_coin_successful(self):
+        print(f"Started {'test_created_coin_successful'}")
         """Test coin created successful by authenticated user."""
         payload = generate_payload('bitcoin', 3.0)
         result = self.client.post(CREATE_COIN_URL, payload)
@@ -84,6 +85,7 @@ class AuthenticatedUserTests(TestCase):
         self.assertEqual(user_portfolio[0].name, payload["name"])
 
     def test_created_coin_visible_only_for_author(self):
+        print(f"Started {'test_created_coin_visible_only_for_author'}")
         """Test created coin in portfolio is not visible for other users."""
         payload = generate_payload('bitcoin', 3.0)
         result = self.client.post(CREATE_COIN_URL, payload)
@@ -105,6 +107,7 @@ class AuthenticatedUserTests(TestCase):
         self.assertEqual(len(user2_portfolio), 0)
 
     def test_coin_duplication_not_possible(self):
+        print(f"Started {'test_coin_duplication_not_possible'}")
         """Test it is not possible to duplicate cryptocurrency in portfolio."""
         payload = generate_payload('bitcoin', 3.0)
         result = self.client.post(CREATE_COIN_URL, payload)
@@ -119,6 +122,7 @@ class AuthenticatedUserTests(TestCase):
         self.assertEqual(total_amount, user_portfolio[0].amount)
 
     def test_created_multiple_coins_successful(self):
+        print(f"Started {'test_created_multiple_coins_successful'}")
         """Test coins created successful by authenticated user."""
         coins_to_create = {
             'bitcoin': 3.0,
@@ -138,6 +142,7 @@ class AuthenticatedUserTests(TestCase):
         self.assertEqual(len(user_portfolio.all()), len(results))
 
     def test_formatting_coin_name(self):
+        print(f"Started {'test_formatting_coin_name'}")
         """Test size of letters or whitespaces do not have impact for searching coin."""
         coin_name_variants = [
             'bitcoin',
@@ -157,16 +162,17 @@ class AuthenticatedUserTests(TestCase):
             self.assertEqual(result.status_code, status.HTTP_201_CREATED)
 
     def test_added_coin_with_amount_0(self):
+        print(f"Started {'test_added_coin_with_amount_0'}")
         """Test coin was added correctly after creation with amount 0."""
         payload = generate_payload('bitcoin', 0)
         result = self.client.post(CREATE_COIN_URL, payload)
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
-        # print(user_portfolio[0].date)
 
         self.assertEqual(result.status_code, status.HTTP_201_CREATED)
         self.assertEqual(int(user_portfolio[0].amount), 0)
 
     def test_correctness_of_date_and_time(self):
+        print(f"Started {'test_correctness_of_date_and_time'}")
         """Test date and time were added correctly."""
         payload = generate_payload('bitcoin', 2)
         result = self.client.post(CREATE_COIN_URL, payload)
@@ -175,3 +181,21 @@ class AuthenticatedUserTests(TestCase):
 
         self.assertEqual(result.status_code, status.HTTP_201_CREATED)
         self.assertEqual(user_portfolio[0].date, current_date_and_time)
+
+    def test_remove_selected_coin_from_portfolio(self):
+        print(f"Started {'test_remove_selected_coin_from_portfolio'}")
+        """Remove selected coin from authenticated user portfolio."""
+        payload = generate_payload('bitcoin', 2)
+        result = self.client.post(CREATE_COIN_URL, payload)
+
+        user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
+        created_coin = user_portfolio[0]
+        num_coins_before_del = len(user_portfolio.all())
+
+        response = self.client.delete(f'{CREATE_COIN_URL}{created_coin.id}/')
+        num_coins_after_del = len(user_portfolio.all())
+
+        self.assertEqual(result.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(num_coins_before_del, 1)
+        self.assertEqual(num_coins_after_del, 0)
