@@ -9,9 +9,10 @@ from .models import Cryptocurrency
 from user.models import User
 
 
-def get_available_coins_and_ids(user):
-    """Return coin list of already existing coins, and it's id's in selected user portfolio."""
-    return {coin.id: coin.name for coin in user.crypto.all()}
+def retrieve_coins_to_delete(coins_to_retrieve) -> list:
+    """Get input and return list of coin names to delete."""
+    splitted_coins = coins_to_retrieve[1:].split(', ')
+    return [coin_name.split(': ')[1].split('>')[0] for coin_name in splitted_coins]
 
 
 class CryptocurrencyViewSet(viewsets.ModelViewSet):
@@ -28,32 +29,16 @@ class CryptocurrencyViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         user = self.request.user
-        available_coins_and_ids = get_available_coins_and_ids(user)
-
-        id_to_delete = int(kwargs['pk'])
-        name_to_delete = available_coins_and_ids[int(kwargs['pk'])]
+        names_to_delete = retrieve_coins_to_delete(kwargs['pk'])
 
         # Remove selected coin if exist in authenticated user portfolio.
-        if name_to_delete != '' and name_to_delete != 'all':
+        if len(names_to_delete) != 0:
             for coin in user.crypto.all():
-                if coin.pk == id_to_delete:
+                if coin.name in names_to_delete:
+                    deleted_coin = coin.name
                     coin.delete()
-                    print(f'[INFO] --- Removed following coin: {name_to_delete} ---')
+                    print(f'[INFO] --- Removed following coin: {deleted_coin} ---')
 
-                    return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        # # Remove all coins from authenticated user portfolio.
-        # elif to_delete.lower() == 'all':
-        #     if len(available_coins) == 0:
-        #         pass
-        #         # TODO: Add error handling here.
-        #     else:
-        #         user.crypto.all().delete()
-        #         print('[INFO] --- Portfolio cleaned ---')
-        #
-        # # Incorrect input.
-        # else:
-        #     pass
-        #     # TODO: Add error handling here.
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)

@@ -189,13 +189,35 @@ class AuthenticatedUserTests(TestCase):
         result = self.client.post(CREATE_COIN_URL, payload)
 
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
-        created_coin = user_portfolio[0]
         num_coins_before_del = len(user_portfolio.all())
 
-        response = self.client.delete(f'{CREATE_COIN_URL}{created_coin.id}/')
+        response = self.client.delete(f'{CREATE_COIN_URL}{user_portfolio}/')
         num_coins_after_del = len(user_portfolio.all())
 
         self.assertEqual(result.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(num_coins_before_del, 1)
         self.assertEqual(num_coins_after_del, 0)
+
+    def test_reset_portfolio(self):
+        print(f"Started {'test_reset_portfolio'}")
+        """Test portfolio reset works correctly."""
+        coins_to_create = {
+            'bitcoin': 3.0,
+            'ethereum': 5.0,
+            'cardano': 40.0
+        }
+        results = []
+
+        for coin, amount in coins_to_create.items():
+            payload = generate_payload(coin, amount)
+            results.append(self.client.post(CREATE_COIN_URL, payload))
+        user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
+
+        portfolio_len_before_reset = len(user_portfolio.all())
+        response = self.client.delete(f'{CREATE_COIN_URL}{user_portfolio}/')
+        portfolio_len_after_reset = len(user_portfolio.all())
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(portfolio_len_before_reset, len(coins_to_create))
+        self.assertEqual(portfolio_len_after_reset, 0)
