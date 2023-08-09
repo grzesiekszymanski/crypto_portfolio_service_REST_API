@@ -245,3 +245,31 @@ class AuthenticatedUserTests(TestCase):
         payload = generate_payload('bitcoin', -2)
         with self.assertRaises(Exception):
             self.client.post(CREATE_COIN_URL, payload)
+
+    def test_user_has_no_access_to_read_only_fields(self):
+        print(f"Started {'test_user_has_no_access_to_read_only_fields'}")
+        """Tests user can't modify automatically calculated fields."""
+        results = []
+        read_only_fields = [
+            'price',
+            'worth',
+            'total_profit_loss',
+            'total_profit_loss_percent',
+            'profit_loss_24h',
+            'profit_loss_percent_24h',
+            'participation_in_portfolio',
+            'date'
+        ]
+        payload = generate_payload('bitcoin', 3.0)
+
+        for field in read_only_fields:
+            payload[field] = '-1'
+            self.client.post(CREATE_COIN_URL, payload)
+
+            user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)[0]
+
+            for attr, value in user_portfolio.__dict__.items():
+                if attr == field:
+                    results.append(False) if value == '-1' else results.append(True)
+
+        self.assertNotIn(False, results)
