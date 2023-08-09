@@ -29,10 +29,10 @@ class CryptocurrencyViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         user = self.request.user
-        names_to_delete = retrieve_coins_to_delete(kwargs['pk'])
 
         # Remove selected coin if exist in authenticated user portfolio.
-        if len(names_to_delete) != 0:
+        try:
+            names_to_delete = retrieve_coins_to_delete(kwargs['pk'])
             for coin in user.crypto.all():
                 if coin.name in names_to_delete:
                     deleted_coin = coin.name
@@ -40,5 +40,5 @@ class CryptocurrencyViewSet(viewsets.ModelViewSet):
                     print(f'[INFO] --- Removed following coin: {deleted_coin} ---')
 
             return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
+        except IndexError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
