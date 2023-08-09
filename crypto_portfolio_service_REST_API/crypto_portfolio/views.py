@@ -9,6 +9,7 @@ from user.models import User
 
 class CryptocurrencyViewSet(viewsets.ModelViewSet):
     """View for cryptocurrency management."""
+
     serializer_class = CryptocurrencySerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]

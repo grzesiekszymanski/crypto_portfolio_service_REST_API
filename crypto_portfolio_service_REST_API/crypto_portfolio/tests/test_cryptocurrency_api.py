@@ -12,7 +12,7 @@ from user.models import User
 from crypto_portfolio.models import Cryptocurrency
 
 
-CREATE_COIN_URL = reverse('crypto_portfolio:manage-list')
+CREATE_COIN_URL = reverse("crypto_portfolio:manage-list")
 
 
 def create_user(**params):
@@ -22,16 +22,16 @@ def create_user(**params):
 
 def generate_payload():
     payload = {
-        'name': 'bitcoin',
-        'price': '',
-        'amount': 3,
-        'worth': '',
-        'total_profit_loss': '',
-        'total_profit_loss_percent': '',
-        'profit_loss_24h': '',
-        'profit_loss_percent_24h': '',
-        'participation_in_portfolio': '',
-        'date': ''
+        "name": "bitcoin",
+        "price": "",
+        "amount": 3,
+        "worth": "",
+        "total_profit_loss": "",
+        "total_profit_loss_percent": "",
+        "profit_loss_24h": "",
+        "profit_loss_percent_24h": "",
+        "participation_in_portfolio": "",
+        "date": "",
     }
     return payload
 
@@ -60,9 +60,9 @@ class AuthenticatedUserTests(TestCase):
 
     def setUp(self):
         self.user = create_user(
-            email='test_email@example.com',
-            username='test_username',
-            password='test_password',
+            email="test_email@example.com",
+            username="test_username",
+            password="test_password",
         )
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
@@ -74,7 +74,7 @@ class AuthenticatedUserTests(TestCase):
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
 
         self.assertEqual(result.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(user_portfolio[0].name, payload['name'])
+        self.assertEqual(user_portfolio[0].name, payload["name"])
 
     def test_created_coin_visible_only_for_author(self):
         """Test created coin in portfolio is not visible for other users."""
@@ -83,9 +83,9 @@ class AuthenticatedUserTests(TestCase):
 
         # Create and force second user authentication.
         user2 = create_user(
-            email='test_email2@example.com',
-            username='test_username2',
-            password='test_password2',
+            email="test_email2@example.com",
+            username="test_username2",
+            password="test_password2",
         )
         self.client = APIClient()
         self.client.force_authenticate(user=user2)
@@ -104,7 +104,7 @@ class AuthenticatedUserTests(TestCase):
         result2 = self.client.post(CREATE_COIN_URL, payload)
 
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
-        total_amount = str(float(payload['amount'] + payload['amount']))
+        total_amount = str(float(payload["amount"] + payload["amount"]))
         print(user_portfolio[0].amount)
 
         self.assertEqual(result.status_code, status.HTTP_201_CREATED)
