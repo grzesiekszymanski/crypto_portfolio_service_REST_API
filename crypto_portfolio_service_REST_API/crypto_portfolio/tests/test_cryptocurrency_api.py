@@ -2,6 +2,7 @@
 Tests for the cryptocurrency API.
 """
 from datetime import datetime
+from pycoingecko import CoinGeckoAPI
 
 from django.test import TestCase
 from django.contrib.auth import get_user_model
@@ -14,6 +15,7 @@ from user.models import User
 
 
 CREATE_COIN_URL = reverse("crypto_portfolio:manage-list")
+cg = CoinGeckoAPI()
 
 
 def create_user(**params):
@@ -61,6 +63,12 @@ def get_list_of_user_portfolio_general_data(user_index):
 def read_current_date_and_time():
     """Return current date and time."""
     return datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
+
+def get_24h_coin_price_change_percent(coin_name):
+    """Return 24h price change for selected coin."""
+    data = cg.get_price(ids=coin_name, vs_currencies="usd", include_24hr_change="true",)
+    return round(data[coin_name]["usd_24h_change"], 2)
 
 
 class NotAuthenticatedUserTests(TestCase):
@@ -309,3 +317,14 @@ class AuthenticatedUserTests(TestCase):
             total_value += round(float(coin.price) * float(coin.amount), 2)
 
         self.assertEqual(float(self.user.general_data.all()[0].total_value), total_value)
+
+    def test_coin_24h_change_percent(self):
+        print(f"Started {'test_coin_24h_change_percent'}")
+        """Test 24h coin price change attached to cryptocurrency data."""
+        payload = generate_coin_payload('bitcoin', 2)
+        result = self.client.post(CREATE_COIN_URL, payload)
+        user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
+        price_24h_change = get_24h_coin_price_change_percent(payload['name'])
+
+        self.assertEqual(result.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(float(user_portfolio[0].coin_profit_loss_percent_24h), price_24h_change)

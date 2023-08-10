@@ -46,14 +46,20 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
 
         coin_string_formatted = coin_name.lower().strip()
         current_coin_price = self.cg.get_price(
-            ids=coin_string_formatted, vs_currencies="usd"
+            ids=coin_string_formatted,
+            vs_currencies="usd",
+            include_24hr_change="true",
         )
         try:
             price_in_usd = current_coin_price[f"{coin_string_formatted}"]["usd"]
+            change_24h_percent = round(current_coin_price[f"{coin_string_formatted}"]["usd_24h_change"], 2)
         except Exception:
             raise Exception("Selected cryptocurrency wasn't found!")
 
-        return float(price_in_usd)
+        return {
+            'price_in_usd': float(price_in_usd),
+            'change_24h_percent': float(change_24h_percent)
+        }
 
     @staticmethod
     def _get_coin_names_from_portfolio(user):
@@ -113,10 +119,11 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
             portfolio_coins = self._get_coin_names_from_portfolio(user)
 
             # Calculate coin properties.
-            coin_price_usd = self._get_coin_price(coin_name)
+            coin_price_usd = self._get_coin_price(coin_name)["price_in_usd"]
             worth = self._calculate_worth_of_added_coin(
                 coin_price_usd, validated_data["amount"]
             )
+            change_24h_percent = self._get_coin_price(coin_name)["change_24h_percent"]
 
             # Set cryptocurrency parameters.
             if coin_name in portfolio_coins:
@@ -131,11 +138,13 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
                 coin_for_update.amount = float(coin_for_update.amount) + float(coin_amount)
                 coin_for_update.worth = float(coin_for_update.worth) + float(worth)
                 coin_for_update.last_update = self._read_current_date_and_time()
+                coin_for_update.coin_profit_loss_percent_24h = change_24h_percent
 
                 coin_for_update.save()
             else:
                 validated_data["price"] = coin_price_usd
                 validated_data["worth"] = worth
+                validated_data["coin_profit_loss_percent_24h"] = change_24h_percent
                 validated_data["last_update"] = self._read_current_date_and_time()
                 user.crypto.create(**validated_data)
 
