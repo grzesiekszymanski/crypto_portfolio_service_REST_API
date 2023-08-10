@@ -29,11 +29,8 @@ def generate_coin_payload(coin_name: str, amount: float) -> dict:
         "price": "",
         "amount": amount,
         "worth": "",
-        "total_profit_loss": "",
-        "total_profit_loss_percent": "",
-        "profit_loss_24h": "",
         "profit_loss_percent_24h": "",
-        "participation_in_portfolio": "",
+        "coin_participation_in_portfolio": "",
         "last_update": "",
     }
     return payload
@@ -277,11 +274,8 @@ class AuthenticatedUserTests(TestCase):
         read_only_fields = [
             'price',
             'worth',
-            'total_profit_loss',
-            'total_profit_loss_percent',
-            'profit_loss_24h',
             'profit_loss_percent_24h',
-            'participation_in_portfolio',
+            'coin_participation_in_portfolio',
             'last_update'
         ]
         payload = generate_coin_payload('bitcoin', 3.0)
@@ -320,7 +314,7 @@ class AuthenticatedUserTests(TestCase):
 
     def test_coin_24h_change_percent(self):
         print(f"Started {'test_coin_24h_change_percent'}")
-        """Test 24h coin price change attached to cryptocurrency data."""
+        """Test 24h coin percent price change attached to cryptocurrency data."""
         payload = generate_coin_payload('bitcoin', 2)
         result = self.client.post(CREATE_COIN_URL, payload)
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)

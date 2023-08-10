@@ -21,21 +21,15 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
             "price",
             "amount",
             "worth",
-            "coin_total_profit_loss",
-            "coin_total_profit_loss_percent",
-            "coin_profit_loss_24h",
             "coin_profit_loss_percent_24h",
-            "participation_in_portfolio",
+            "coin_participation_in_portfolio",
             "last_update",
         ]
         read_only_fields = [
             'price',
             'worth',
-            'total_profit_loss',
-            'total_profit_loss_percent',
-            'profit_loss_24h',
-            'profit_loss_percent_24h'
-            'participation_in_portfolio',
+            'coin_profit_loss_percent_24h'
+            'coin_participation_in_portfolio',
             'last_update'
         ]
 
