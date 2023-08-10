@@ -114,6 +114,19 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
                         coin.coin_participation_in_portfolio = 0
                     coin.save()
 
+    def _calculate_total_profit_loss_in_usd(self, user):
+        """Calculate current and initial coins value, return profit/loss balance in usd."""
+        initial_total_value = self._calculate_total_coins_value(user)
+        current_total_value = 0
+
+        for coin in User.objects.all()[0].crypto.all():
+            current_coin_price = self._get_coin_price(coin.name)['price_in_usd']
+            current_coin_amount = float(coin.amount)
+
+            current_total_value += current_coin_price * current_coin_amount
+
+        return round(current_total_value - initial_total_value, 2)
+
     def create(self, validated_data):
         """Create cryptocurrency in authenticated user portfolio."""
         try:
@@ -159,12 +172,13 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
             # Generate data related with PortfolioData model.
             portfolio_data = {
                 'total_value': self._calculate_total_coins_value(user),
-                'total_profit_loss': "",
+                'total_profit_loss': self._calculate_total_profit_loss_in_usd(user),
                 'total_profit_loss_percent': "",
                 'total_profit_loss_24h': "",
                 'total_profit_loss_percent_24h': ""
             }
 
+            # Moved here because coin must be created before calculation.
             self._calculate_coins_participation_in_portfolio(user)
 
             # Always clean general_data queryset to hava always maximum 1 object in queryset with updated data.

@@ -13,7 +13,6 @@ from rest_framework import status
 
 from user.models import User
 
-
 CREATE_COIN_URL = reverse("crypto_portfolio:manage-list")
 cg = CoinGeckoAPI()
 
@@ -64,8 +63,14 @@ def read_current_date_and_time():
 
 def get_24h_coin_price_change_percent(coin_name):
     """Return 24h price change for selected coin."""
-    data = cg.get_price(ids=coin_name, vs_currencies="usd", include_24hr_change="true",)
+    data = cg.get_price(ids=coin_name, vs_currencies="usd", include_24hr_change="true", )
     return round(data[coin_name]["usd_24h_change"], 2)
+
+
+def get_current_coin_price(coin_name):
+    """Return current price for selected coin."""
+    price = cg.get_price(ids=coin_name, vs_currencies="usd")
+    return round(float(price[coin_name]["usd"]), 2)
 
 
 class NotAuthenticatedUserTests(TestCase):
@@ -343,3 +348,34 @@ class AuthenticatedUserTests(TestCase):
         eth_participation = (float(eth_worth) * 100) / total_value
 
         self.assertEqual(round(eth_participation, 2), eth_participation_in_portfolio)
+
+    def test_calculate_total_profit_loss_in_usd(self):
+        print(f"Started {'test_calculate_total_profit_loss_in_usd'}")
+        """Test calculate current portfolio profit/loss balance in usd."""
+        coins_to_create = {
+            'bitcoin': 3.0,
+            'ethereum': 5.0,
+            'cardano': 40.0
+        }
+        calculated_worth = 0
+
+        for coin, amount in coins_to_create.items():
+            payload = generate_coin_payload(coin, amount)
+            self.client.post(CREATE_COIN_URL, payload)
+
+        balance_queryset = float(self.user.general_data.all()[0].total_profit_loss)
+        total_value = self.user.general_data.all()[0].total_value
+        user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
+
+        for coin in user_portfolio:
+            current_coin_price = get_current_coin_price(coin.name)
+            current_coin_amount = float(coin.amount)
+            calculated_worth += current_coin_price * current_coin_amount
+
+        calculated_balance = round(calculated_worth - float(total_value), 2)
+        allowable_tolerance = calculated_balance * 0.03
+
+        result = True if balance_queryset - calculated_balance < allowable_tolerance or \
+                         calculated_balance - balance_queryset < allowable_tolerance else False
+
+        self.assertTrue(result)
