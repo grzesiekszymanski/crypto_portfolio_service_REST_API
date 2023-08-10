@@ -17,7 +17,7 @@ class Cryptocurrency(models.Model):
     coin_profit_loss_24h = models.CharField(default=0)
     coin_profit_loss_percent_24h = models.CharField(default=0)
     participation_in_portfolio = models.CharField(default=0)
-    date = models.CharField(max_length=25, default="")
+    last_update = models.CharField(max_length=25, default="")
 
     def __str__(self):
         return self.name

@@ -26,7 +26,7 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
             "coin_profit_loss_24h",
             "coin_profit_loss_percent_24h",
             "participation_in_portfolio",
-            "date",
+            "last_update",
         ]
         read_only_fields = [
             'price',
@@ -36,7 +36,7 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
             'profit_loss_24h',
             'profit_loss_percent_24h'
             'participation_in_portfolio',
-            'date'
+            'last_update'
         ]
 
     cg = CoinGeckoAPI()
@@ -130,13 +130,13 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
 
                 coin_for_update.amount = float(coin_for_update.amount) + float(coin_amount)
                 coin_for_update.worth = float(coin_for_update.worth) + float(worth)
-                coin_for_update.date = self._read_current_date_and_time()
+                coin_for_update.last_update = self._read_current_date_and_time()
 
                 coin_for_update.save()
             else:
                 validated_data["price"] = coin_price_usd
                 validated_data["worth"] = worth
-                validated_data["date"] = self._read_current_date_and_time()
+                validated_data["last_update"] = self._read_current_date_and_time()
                 user.crypto.create(**validated_data)
 
             # Generate data related with PortfolioData model.

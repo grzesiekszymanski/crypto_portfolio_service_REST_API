@@ -32,7 +32,7 @@ def generate_coin_payload(coin_name: str, amount: float) -> dict:
         "profit_loss_24h": "",
         "profit_loss_percent_24h": "",
         "participation_in_portfolio": "",
-        "date": "",
+        "last_update": "",
     }
     return payload
 
@@ -196,7 +196,7 @@ class AuthenticatedUserTests(TestCase):
         current_date_and_time = read_current_date_and_time()
 
         self.assertEqual(result.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(user_portfolio[0].date, current_date_and_time)
+        self.assertEqual(user_portfolio[0].last_update, current_date_and_time)
 
     def test_remove_selected_coin_from_portfolio(self):
         print(f"Started {'test_remove_selected_coin_from_portfolio'}")
@@ -274,7 +274,7 @@ class AuthenticatedUserTests(TestCase):
             'profit_loss_24h',
             'profit_loss_percent_24h',
             'participation_in_portfolio',
-            'date'
+            'last_update'
         ]
         payload = generate_coin_payload('bitcoin', 3.0)
 
@@ -291,6 +291,7 @@ class AuthenticatedUserTests(TestCase):
         self.assertNotIn(False, results)
 
     def test_calculate_total_coins_value(self):
+        print(f"Started {'test_calculate_total_coins_value'}")
         """Calculate total coins value from authenticated user portfolio."""
         coins_to_create = {
             'bitcoin': 3.0,
