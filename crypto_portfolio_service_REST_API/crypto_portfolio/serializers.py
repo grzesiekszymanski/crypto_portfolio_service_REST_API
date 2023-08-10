@@ -99,6 +99,21 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
 
         return sum(read_portfolio)
 
+    def _calculate_coins_participation_in_portfolio(self, user):
+        """Calculate participation percent for coins in authenticated user portfolio."""
+        coin_data = {coin.name: coin.worth for coin in user.crypto.all()}
+        total_portfolio_value = round(self._calculate_total_coins_value(user), 2)
+
+        for coin_name, coin_worth in coin_data.items():
+            for coin in user.crypto.all():
+                if coin.name == coin_name:
+                    try:
+                        coin.coin_participation_in_portfolio = round((100 * float(coin_worth)) /
+                                                                     total_portfolio_value, 2)
+                    except ZeroDivisionError:
+                        coin.coin_participation_in_portfolio = 0
+                    coin.save()
+
     def create(self, validated_data):
         """Create cryptocurrency in authenticated user portfolio."""
         try:
@@ -133,7 +148,6 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
                 coin_for_update.worth = float(coin_for_update.worth) + float(worth)
                 coin_for_update.last_update = self._read_current_date_and_time()
                 coin_for_update.coin_profit_loss_percent_24h = change_24h_percent
-
                 coin_for_update.save()
             else:
                 validated_data["price"] = coin_price_usd
@@ -150,6 +164,8 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
                 'total_profit_loss_24h': "",
                 'total_profit_loss_percent_24h': ""
             }
+
+            self._calculate_coins_participation_in_portfolio(user)
 
             # Always clean general_data queryset to hava always maximum 1 object in queryset with updated data.
             user.general_data.all().delete()

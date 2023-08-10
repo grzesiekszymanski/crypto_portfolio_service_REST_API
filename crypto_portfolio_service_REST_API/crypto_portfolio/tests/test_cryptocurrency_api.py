@@ -322,3 +322,24 @@ class AuthenticatedUserTests(TestCase):
 
         self.assertEqual(result.status_code, status.HTTP_201_CREATED)
         self.assertEqual(float(user_portfolio[0].coin_profit_loss_percent_24h), price_24h_change)
+
+    def test_coin_participation_in_portfolio(self):
+        print(f"Started {'test_coin_participation_in_portfolio'}")
+        """Test coin participation in portfolio works correctly."""
+        coins_to_create = {
+            'bitcoin': 3.0,
+            'ethereum': 5.0,
+            'cardano': 40.0
+        }
+
+        for coin, amount in coins_to_create.items():
+            payload = generate_coin_payload(coin, amount)
+            self.client.post(CREATE_COIN_URL, payload)
+        user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
+
+        total_value = float(self.user.general_data.all()[0].total_value)
+        eth_participation_in_portfolio = float(user_portfolio[1].coin_participation_in_portfolio)
+        eth_worth = user_portfolio[1].worth
+        eth_participation = (float(eth_worth) * 100) / total_value
+
+        self.assertEqual(round(eth_participation, 2), eth_participation_in_portfolio)
