@@ -3,9 +3,9 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .serializers import CryptocurrencySerializer
+from .serializers import CryptocurrencySerializer, PortfolioDataSerializer
 
-from .models import Cryptocurrency
+from .models import Cryptocurrency, PortfolioData
 from user.models import User
 
 
@@ -42,3 +42,16 @@ class CryptocurrencyViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except IndexError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class PortfolioDataViewSet(viewsets.ModelViewSet):
+    """View for portfolio data management."""
+
+    serializer_class = PortfolioDataSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = PortfolioData.objects.filter(user=user)
+        return queryset

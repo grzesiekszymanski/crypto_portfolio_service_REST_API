@@ -7,12 +7,12 @@ from pycoingecko import CoinGeckoAPI
 from rest_framework import serializers, status
 from rest_framework.response import Response
 
-from .models import Cryptocurrency
+from .models import Cryptocurrency, PortfolioData
 from user.models import User
 
 
 class CryptocurrencySerializer(serializers.ModelSerializer):
-    """Serializer for cryptocurrency."""
+    """Serializer for Cryptocurrency."""
 
     class Meta:
         model = Cryptocurrency
@@ -21,10 +21,10 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
             "price",
             "amount",
             "worth",
-            "total_profit_loss",
-            "total_profit_loss_percent",
-            "profit_loss_24h",
-            "profit_loss_percent_24h",
+            "coin_total_profit_loss",
+            "coin_total_profit_loss_percent",
+            "coin_profit_loss_24h",
+            "coin_profit_loss_percent_24h",
             "participation_in_portfolio",
             "date",
         ]
@@ -92,6 +92,13 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
         """Return current date and time."""
         return datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
+    @staticmethod
+    def _calculate_total_coins_value(user):
+        """Calculate total value of coins already existing in authenticated user portfolio."""
+        read_portfolio = [round(float(coin.worth), 2) for coin in user.crypto.all()]
+
+        return sum(read_portfolio)
+
     def create(self, validated_data):
         """Create cryptocurrency in authenticated user portfolio."""
         try:
@@ -132,7 +139,41 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
                 validated_data["date"] = self._read_current_date_and_time()
                 user.crypto.create(**validated_data)
 
+            # Generate data related with PortfolioData model.
+            portfolio_data = {
+                'total_value': self._calculate_total_coins_value(user),
+                'total_profit_loss': "",
+                'total_profit_loss_percent': "",
+                'total_profit_loss_24h': "",
+                'total_profit_loss_percent_24h': ""
+            }
+
+            # Always clean general_data queryset to hava always maximum 1 object in queryset with updated data.
+            user.general_data.all().delete()
+            user.general_data.create(**portfolio_data)
+
             return Cryptocurrency
 
         except KeyError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class PortfolioDataSerializer(serializers.ModelSerializer):
+    """Serializer for PortfolioData."""
+
+    class Meta:
+        model = PortfolioData
+        fields = [
+            'total_value',
+            'total_profit_loss',
+            'total_profit_loss_percent',
+            'total_profit_loss_24h',
+            'total_profit_loss_percent_24h'
+        ]
+        read_only_fields = [
+            'total_value',
+            'total_profit_loss',
+            'total_profit_loss_percent',
+            'total_profit_loss_24h',
+            'total_profit_loss_percent_24h'
+        ]

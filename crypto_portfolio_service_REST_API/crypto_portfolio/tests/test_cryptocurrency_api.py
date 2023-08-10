@@ -21,7 +21,7 @@ def create_user(**params):
     return get_user_model().objects.create_user(**params)
 
 
-def generate_payload(coin_name: str, amount: float) -> dict:
+def generate_coin_payload(coin_name: str, amount: float) -> dict:
     payload = {
         "name": coin_name,
         "price": "",
@@ -37,9 +37,25 @@ def generate_payload(coin_name: str, amount: float) -> dict:
     return payload
 
 
+def generate_data_payload() -> dict:
+    payload = {
+        'total_value': '',
+        'total_profit_loss': '',
+        'total_profit_loss_percent': '',
+        'total_profit_loss_24h': '',
+        'total_profit_loss_percent_24h': ''
+    }
+    return payload
+
+
 def get_list_of_crypto_selected_user_portfolio(user_index):
     """Return content of user cryptocurrency portfolio."""
     return User.objects.all()[user_index].crypto.all()
+
+
+def get_list_of_user_portfolio_general_data(user_index):
+    """Return content of general data portfolio."""
+    return User.objects.all()[user_index].general_data.all()
 
 
 def read_current_date_and_time():
@@ -56,7 +72,7 @@ class NotAuthenticatedUserTests(TestCase):
     def test_add_coin_not_authenticated_error(self):
         print(f"Started {'test_add_coin_not_authenticated_error'}")
         """Test return error if not authenticated user created coin."""
-        payload = generate_payload('bitcoin', 3.0)
+        payload = generate_coin_payload('bitcoin', 3.0)
         result = self.client.post(CREATE_COIN_URL, payload)
 
         self.assertEqual(result.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -77,7 +93,7 @@ class AuthenticatedUserTests(TestCase):
     def test_created_coin_successful(self):
         print(f"Started {'test_created_coin_successful'}")
         """Test coin created successful by authenticated user."""
-        payload = generate_payload('bitcoin', 3.0)
+        payload = generate_coin_payload('bitcoin', 3.0)
         result = self.client.post(CREATE_COIN_URL, payload)
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
 
@@ -87,7 +103,7 @@ class AuthenticatedUserTests(TestCase):
     def test_created_coin_visible_only_for_author(self):
         print(f"Started {'test_created_coin_visible_only_for_author'}")
         """Test created coin in portfolio is not visible for other users."""
-        payload = generate_payload('bitcoin', 3.0)
+        payload = generate_coin_payload('bitcoin', 3.0)
         result = self.client.post(CREATE_COIN_URL, payload)
 
         # Create and force second user authentication.
@@ -109,7 +125,7 @@ class AuthenticatedUserTests(TestCase):
     def test_coin_duplication_not_possible(self):
         print(f"Started {'test_coin_duplication_not_possible'}")
         """Test it is not possible to duplicate cryptocurrency in portfolio."""
-        payload = generate_payload('bitcoin', 3.0)
+        payload = generate_coin_payload('bitcoin', 3.0)
         result = self.client.post(CREATE_COIN_URL, payload)
         result2 = self.client.post(CREATE_COIN_URL, payload)
 
@@ -132,7 +148,7 @@ class AuthenticatedUserTests(TestCase):
         results = []
 
         for coin, amount in coins_to_create.items():
-            payload = generate_payload(coin, amount)
+            payload = generate_coin_payload(coin, amount)
             results.append(self.client.post(CREATE_COIN_URL, payload))
 
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
@@ -155,7 +171,7 @@ class AuthenticatedUserTests(TestCase):
         results = []
 
         for coin_name in coin_name_variants:
-            payload = generate_payload(coin_name, 1)
+            payload = generate_coin_payload(coin_name, 1)
             results.append(self.client.post(CREATE_COIN_URL, payload))
 
         for result in results:
@@ -164,7 +180,7 @@ class AuthenticatedUserTests(TestCase):
     def test_added_coin_with_amount_0(self):
         print(f"Started {'test_added_coin_with_amount_0'}")
         """Test coin was added correctly after creation with amount 0."""
-        payload = generate_payload('bitcoin', 0)
+        payload = generate_coin_payload('bitcoin', 0)
         result = self.client.post(CREATE_COIN_URL, payload)
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
 
@@ -174,7 +190,7 @@ class AuthenticatedUserTests(TestCase):
     def test_correctness_of_date_and_time(self):
         print(f"Started {'test_correctness_of_date_and_time'}")
         """Test date and time were added correctly."""
-        payload = generate_payload('bitcoin', 2)
+        payload = generate_coin_payload('bitcoin', 2)
         result = self.client.post(CREATE_COIN_URL, payload)
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
         current_date_and_time = read_current_date_and_time()
@@ -185,7 +201,7 @@ class AuthenticatedUserTests(TestCase):
     def test_remove_selected_coin_from_portfolio(self):
         print(f"Started {'test_remove_selected_coin_from_portfolio'}")
         """Remove selected coin from authenticated user portfolio."""
-        payload = generate_payload('bitcoin', 2)
+        payload = generate_coin_payload('bitcoin', 2)
         result = self.client.post(CREATE_COIN_URL, payload)
 
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
@@ -210,7 +226,7 @@ class AuthenticatedUserTests(TestCase):
         results = []
 
         for coin, amount in coins_to_create.items():
-            payload = generate_payload(coin, amount)
+            payload = generate_coin_payload(coin, amount)
             results.append(self.client.post(CREATE_COIN_URL, payload))
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
 
@@ -225,7 +241,7 @@ class AuthenticatedUserTests(TestCase):
     def test_incorrect_coin_name_delete_error(self):
         print(f"Started {'test_incorrect_coin_name_error'}")
         """Test sending incorrect coin name to delete returns bad request status."""
-        payload = generate_payload('bitcoin', 2)
+        payload = generate_coin_payload('bitcoin', 2)
         result = self.client.post(CREATE_COIN_URL, payload)
         response = self.client.delete(f'{CREATE_COIN_URL}incorrect_name/')
 
@@ -235,14 +251,14 @@ class AuthenticatedUserTests(TestCase):
     def test_incorrect_coin_name_create_error(self):
         print(f"Started {'test_incorrect_coin_name_create_error'}")
         """Test sending incorrect coin name to create returns bad request status."""
-        payload = generate_payload('b_i_t_c_o_i_n', 2)
+        payload = generate_coin_payload('b_i_t_c_o_i_n', 2)
         with self.assertRaises(Exception):
             self.client.post(CREATE_COIN_URL, payload)
 
     def test_incorrect_coin_amount_create_error(self):
         print(f"Started {'test_incorrect_coin_amount_create_error'}")
         """Test sending incorrect coin amount to create returns bad request status."""
-        payload = generate_payload('bitcoin', -2)
+        payload = generate_coin_payload('bitcoin', -2)
         with self.assertRaises(Exception):
             self.client.post(CREATE_COIN_URL, payload)
 
@@ -260,7 +276,7 @@ class AuthenticatedUserTests(TestCase):
             'participation_in_portfolio',
             'date'
         ]
-        payload = generate_payload('bitcoin', 3.0)
+        payload = generate_coin_payload('bitcoin', 3.0)
 
         for field in read_only_fields:
             payload[field] = '-1'
@@ -273,3 +289,22 @@ class AuthenticatedUserTests(TestCase):
                     results.append(False) if value == '-1' else results.append(True)
 
         self.assertNotIn(False, results)
+
+    def test_calculate_total_coins_value(self):
+        """Calculate total coins value from authenticated user portfolio."""
+        coins_to_create = {
+            'bitcoin': 3.0,
+            'ethereum': 5.0,
+            'cardano': 40.0
+        }
+        total_value = 0
+
+        for coin, amount in coins_to_create.items():
+            payload = generate_coin_payload(coin, amount)
+            self.client.post(CREATE_COIN_URL, payload)
+        user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
+
+        for coin in user_portfolio:
+            total_value += round(float(coin.price) * float(coin.amount), 2)
+
+        self.assertEqual(float(self.user.general_data.all()[0].total_value), total_value)
