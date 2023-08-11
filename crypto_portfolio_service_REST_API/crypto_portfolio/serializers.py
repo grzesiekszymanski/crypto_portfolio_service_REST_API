@@ -141,12 +141,18 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
         return result
 
     @staticmethod
-    def _calculate_total_profit_loss_in_percent(total_value, total_profit_loss):
+    def _calculate_total_profit_loss_in_percent(total_value, total_profit_loss, total_profit_loss_24h):
         """Calculate current and initial coins value, return profit/loss balance in percent."""
+        result = {
+            'total_profit_loss_percent': None,
+            'total_profit_loss_percent_24h': None,
+        }
         try:
-            result = (100 * total_profit_loss) / total_value
+            result['total_profit_loss_percent'] = (100 * total_profit_loss) / total_value
+            result['total_profit_loss_percent_24h'] = (100 * total_profit_loss_24h) / total_value
         except ZeroDivisionError:
-            result = 0
+            result['total_profit_loss_percent'] = 0
+            result['total_profit_loss_percent_24h'] = 0
 
         return result
 
@@ -195,8 +201,12 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
             # Calculate data related with PortfolioData model.
             total_value = self._calculate_total_coins_value(user)
             total_profit_loss = self._calculate_total_profit_loss_in_usd(user)['total_balance_in_usd']
-            total_profit_loss_percent = self._calculate_total_profit_loss_in_percent(total_value, total_profit_loss)
             total_profit_loss_24h = self._calculate_total_profit_loss_in_usd(user)['total_balance_in_usd_24h']
+            calculated_balance = self._calculate_total_profit_loss_in_percent(total_value,
+                                                                              total_profit_loss,
+                                                                              total_profit_loss_24h)
+            total_profit_loss_percent = calculated_balance['total_profit_loss_percent']
+            total_profit_loss_percent_24h = calculated_balance['total_profit_loss_percent_24h']
 
             # Generate data related with PortfolioData model.
             portfolio_data = {
@@ -204,7 +214,7 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
                 'total_profit_loss': total_profit_loss,
                 'total_profit_loss_percent': total_profit_loss_percent,
                 'total_profit_loss_24h': total_profit_loss_24h,
-                'total_profit_loss_percent_24h': ""
+                'total_profit_loss_percent_24h': total_profit_loss_percent_24h
             }
 
             # Moved here because coin must be created before calculation.

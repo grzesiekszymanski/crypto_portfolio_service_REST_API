@@ -432,3 +432,24 @@ class AuthenticatedUserTests(TestCase):
                          calculated_balance - balance_24h_queryset < allowable_tolerance else False
 
         self.assertTrue(result)
+
+    def test_calculate_total_profit_loss_in_percent_24h(self):
+        print(f"Started {'test_calculate_total_profit_loss_in_percent_24h'}")
+        """Test calculate compared to 24h ago portfolio profit/loss balance in percent."""
+        coins_to_create = {
+            'bitcoin': 3.0,
+            'ethereum': 5.0,
+            'cardano': 40.0
+        }
+
+        for coin, amount in coins_to_create.items():
+            payload = generate_coin_payload(coin, amount)
+            self.client.post(CREATE_COIN_URL, payload)
+
+        balance_usd_queryset = float(self.user.general_data.all()[0].total_profit_loss_24h)
+        total_value = self.user.general_data.all()[0].total_value
+        calculated_balance = (100 * balance_usd_queryset) / float(total_value)
+
+        balance_percent_queryset_24h = float(self.user.general_data.all()[0].total_profit_loss_percent_24h)
+
+        self.assertEqual(calculated_balance, balance_percent_queryset_24h)
