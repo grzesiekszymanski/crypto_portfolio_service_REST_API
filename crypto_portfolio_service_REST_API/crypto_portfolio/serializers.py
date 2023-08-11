@@ -127,6 +127,16 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
 
         return round(current_total_value - initial_total_value, 2)
 
+    @staticmethod
+    def _calculate_total_profit_loss_in_percent(total_value, total_profit_loss):
+        """Calculate current and initial coins value, return profit/loss balance in percent."""
+        try:
+            result = (100 * total_profit_loss) / total_value
+        except ZeroDivisionError:
+            result = 0
+
+        return result
+
     def create(self, validated_data):
         """Create cryptocurrency in authenticated user portfolio."""
         try:
@@ -169,11 +179,16 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
                 validated_data["last_update"] = self._read_current_date_and_time()
                 user.crypto.create(**validated_data)
 
+            # Calculate data related with PortfolioData model.
+            total_value = self._calculate_total_coins_value(user)
+            total_profit_loss = self._calculate_total_profit_loss_in_usd(user)
+            total_profit_loss_percent = self._calculate_total_profit_loss_in_percent(total_value, total_profit_loss)
+
             # Generate data related with PortfolioData model.
             portfolio_data = {
-                'total_value': self._calculate_total_coins_value(user),
-                'total_profit_loss': self._calculate_total_profit_loss_in_usd(user),
-                'total_profit_loss_percent': "",
+                'total_value': total_value,
+                'total_profit_loss': total_profit_loss,
+                'total_profit_loss_percent': total_profit_loss_percent,
                 'total_profit_loss_24h': "",
                 'total_profit_loss_percent_24h': ""
             }
