@@ -90,7 +90,7 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
     @staticmethod
     def _read_current_date_and_time():
         """Return current date and time."""
-        return datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        return datetime.now()
 
     @staticmethod
     def _calculate_total_coins_value(user):

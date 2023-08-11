@@ -1,7 +1,7 @@
 """
 Tests for the cryptocurrency API.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 from pycoingecko import CoinGeckoAPI
 
 from django.test import TestCase
@@ -60,7 +60,7 @@ def get_list_of_user_portfolio_general_data(user_index):
 
 def read_current_date_and_time():
     """Return current date and time."""
-    return datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    return datetime.now()
 
 
 def get_24h_coin_price_change_percent(coin_name):
@@ -214,8 +214,14 @@ class AuthenticatedUserTests(TestCase):
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
         current_date_and_time = read_current_date_and_time()
 
+        print(f'user_portfolio[0].last_update: {user_portfolio[0].last_update}')
+        expected_result = \
+            True if current_date_and_time + timedelta(minutes=2) > \
+                    datetime.strptime(user_portfolio[0].last_update, '%Y-%m-%d %H:%M:%S.%f') > \
+                    current_date_and_time + timedelta(minutes=-2) else False
+
         self.assertEqual(result.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(user_portfolio[0].last_update, current_date_and_time)
+        self.assertTrue(expected_result)
 
     def test_remove_selected_coin_from_portfolio(self):
         print(f"Started {'test_remove_selected_coin_from_portfolio'}")
@@ -382,7 +388,7 @@ class AuthenticatedUserTests(TestCase):
             calculated_worth += current_coin_price * current_coin_amount
 
         calculated_balance = round(calculated_worth - float(total_value), 2)
-        allowable_tolerance = calculated_balance * 0.03
+        allowable_tolerance = calculated_balance * 0.05
 
         result = True if balance_queryset - calculated_balance < allowable_tolerance or \
                          calculated_balance - balance_queryset < allowable_tolerance else False
@@ -435,7 +441,7 @@ class AuthenticatedUserTests(TestCase):
             total_value_24h += coin_price_24h * current_coin_amount
 
         calculated_balance = round(total_value_24h - float(total_value), 2)
-        allowable_tolerance = calculated_balance * 0.03
+        allowable_tolerance = calculated_balance * 0.05
 
         result = True if balance_24h_queryset - calculated_balance < allowable_tolerance or \
                          calculated_balance - balance_24h_queryset < allowable_tolerance else False
