@@ -116,16 +116,29 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
 
     def _calculate_total_profit_loss_in_usd(self, user):
         """Calculate current and initial coins value, return profit/loss balance in usd."""
+        result = {
+            'total_balance_in_usd': None,
+            'total_balance_in_usd_24h': None,
+        }
+
         initial_total_value = self._calculate_total_coins_value(user)
         current_total_value = 0
+        total_value_24h = 0
 
         for coin in User.objects.all()[0].crypto.all():
             current_coin_price = self._get_coin_price(coin.name)['price_in_usd']
             current_coin_amount = float(coin.amount)
-
             current_total_value += current_coin_price * current_coin_amount
 
-        return round(current_total_value - initial_total_value, 2)
+            # Get coin price 24h diff in percent -> calculate each coin price 24h ago -> sum all coin prices.
+            coin_diff_24h = self._get_coin_price(coin.name)['change_24h_percent']
+            coin_price_24h = self._get_coin_price(coin.name)['price_in_usd'] * (1 + (coin_diff_24h / 100))
+            total_value_24h += coin_price_24h * current_coin_amount
+
+        result['total_balance_in_usd'] = round(current_total_value - initial_total_value, 2)
+        result['total_balance_in_usd_24h'] = round(total_value_24h - initial_total_value, 2)
+
+        return result
 
     @staticmethod
     def _calculate_total_profit_loss_in_percent(total_value, total_profit_loss):
@@ -181,15 +194,16 @@ class CryptocurrencySerializer(serializers.ModelSerializer):
 
             # Calculate data related with PortfolioData model.
             total_value = self._calculate_total_coins_value(user)
-            total_profit_loss = self._calculate_total_profit_loss_in_usd(user)
+            total_profit_loss = self._calculate_total_profit_loss_in_usd(user)['total_balance_in_usd']
             total_profit_loss_percent = self._calculate_total_profit_loss_in_percent(total_value, total_profit_loss)
+            total_profit_loss_24h = self._calculate_total_profit_loss_in_usd(user)['total_balance_in_usd_24h']
 
             # Generate data related with PortfolioData model.
             portfolio_data = {
                 'total_value': total_value,
                 'total_profit_loss': total_profit_loss,
                 'total_profit_loss_percent': total_profit_loss_percent,
-                'total_profit_loss_24h': "",
+                'total_profit_loss_24h': total_profit_loss_24h,
                 'total_profit_loss_percent_24h': ""
             }
 

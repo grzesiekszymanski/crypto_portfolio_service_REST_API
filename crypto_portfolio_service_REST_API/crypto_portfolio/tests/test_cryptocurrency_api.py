@@ -62,8 +62,8 @@ def read_current_date_and_time():
 
 
 def get_24h_coin_price_change_percent(coin_name):
-    """Return 24h price change for selected coin."""
-    data = cg.get_price(ids=coin_name, vs_currencies="usd", include_24hr_change="true", )
+    """Return price percent difference from 24 hours ago for selected coin."""
+    data = cg.get_price(ids=coin_name, vs_currencies="usd", include_24hr_change="true")
     return round(data[coin_name]["usd_24h_change"], 2)
 
 
@@ -400,3 +400,35 @@ class AuthenticatedUserTests(TestCase):
         balance_percent_queryset = float(self.user.general_data.all()[0].total_profit_loss_percent)
 
         self.assertEqual(calculated_balance, balance_percent_queryset)
+
+    def test_calculate_total_profit_loss_in_usd_24h(self):
+        print(f"Started {'test_calculate_total_profit_loss_in_usd_24h'}")
+        """Test calculate current portfolio profit/loss balance in usd in 24 hours."""
+        coins_to_create = {
+            'bitcoin': 3.0,
+            'ethereum': 5.0,
+            'cardano': 40.0
+        }
+        total_value_24h = 0
+
+        for coin, amount in coins_to_create.items():
+            payload = generate_coin_payload(coin, amount)
+            self.client.post(CREATE_COIN_URL, payload)
+
+        balance_24h_queryset = float(self.user.general_data.all()[0].total_profit_loss_24h)
+        total_value = self.user.general_data.all()[0].total_value
+        user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
+
+        for coin in user_portfolio:
+            coin_diff_24h = get_24h_coin_price_change_percent(coin.name)
+            coin_price_24h = get_current_coin_price(coin.name) * (1 + (coin_diff_24h / 100))
+            current_coin_amount = float(coin.amount)
+            total_value_24h += coin_price_24h * current_coin_amount
+
+        calculated_balance = round(total_value_24h - float(total_value), 2)
+        allowable_tolerance = calculated_balance * 0.03
+
+        result = True if balance_24h_queryset - calculated_balance < allowable_tolerance or \
+                         calculated_balance - balance_24h_queryset < allowable_tolerance else False
+
+        self.assertTrue(result)
