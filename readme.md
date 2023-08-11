@@ -1,8 +1,8 @@
 # Table of Contents
-1. [Project description](#Project-description)
-2. [Technologies and tools](#Technologies-and-tools)
-3. [Run project and tests](#Run-project-and-tests)
-4. [Main functionalities](#Main-functionalities)
+1. [Project description](#project-description)
+2. [Technologies and tools](#technologies-and-tools)
+3. [Run project and tests](#run-project-and-tests)
+4. [Main functionalities](#main-functionalities)
 
 
 ## Project description
