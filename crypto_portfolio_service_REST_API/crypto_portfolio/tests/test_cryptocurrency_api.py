@@ -214,7 +214,6 @@ class AuthenticatedUserTests(TestCase):
         user_portfolio = get_list_of_crypto_selected_user_portfolio(user_index=0)
         current_date_and_time = read_current_date_and_time()
 
-        print(f'user_portfolio[0].last_update: {user_portfolio[0].last_update}')
         expected_result = \
             True if current_date_and_time + timedelta(minutes=2) > \
                     datetime.strptime(user_portfolio[0].last_update, '%Y-%m-%d %H:%M:%S.%f') > \
