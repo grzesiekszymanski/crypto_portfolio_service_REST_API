@@ -13,7 +13,9 @@ from rest_framework import status
 
 from user.models import User
 
+
 CREATE_COIN_URL = reverse("crypto_portfolio:manage-list")
+GET_COIN_LIST_URL = reverse("crypto_portfolio:available_coins")
 cg = CoinGeckoAPI()
 
 
@@ -86,6 +88,13 @@ class NotAuthenticatedUserTests(TestCase):
         result = self.client.post(CREATE_COIN_URL, payload)
 
         self.assertEqual(result.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_all_available_coins_via_external_api(self):
+        print(f"Started {'test_get_all_available_coins_via_external_api'}")
+        """Test get all available coins using external API."""
+        result = self.client.get(GET_COIN_LIST_URL)
+
+        self.assertEqual(result.status_code, status.HTTP_200_OK)
 
 
 class AuthenticatedUserTests(TestCase):

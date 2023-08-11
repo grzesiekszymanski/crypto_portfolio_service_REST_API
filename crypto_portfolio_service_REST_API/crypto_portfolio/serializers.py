@@ -249,3 +249,11 @@ class PortfolioDataSerializer(serializers.ModelSerializer):
             'total_profit_loss_24h',
             'total_profit_loss_percent_24h'
         ]
+
+
+class AvailableCoinsSerializer(serializers.Serializer):
+    """Serializer for available cryptocurrency coins via external API."""
+    available_coins = serializers.ListField(child=serializers.CharField())
+
+    class Meta:
+        list_serializer_class = serializers.ListSerializer

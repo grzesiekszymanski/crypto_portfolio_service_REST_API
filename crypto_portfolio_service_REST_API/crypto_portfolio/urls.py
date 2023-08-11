@@ -14,4 +14,5 @@ app_name = "crypto_portfolio"
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("available_coins", views.AvailableCoinsView.as_view(), name="available_coins"),
 ]
