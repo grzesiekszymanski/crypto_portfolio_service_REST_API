@@ -34,10 +34,13 @@ Follow listed steps to start project using docker container:
 3. Run docker containers `docker compose up` -> Now development server is up
 4. Run interactive REST API documentation (DRF Swagger), enter in your browser `http://0.0.0.0:8000/api/docs`
 
-Follow listed steps to execute tests:
-1. Go to main project folder `cd crypto_portfolio_service_REST_API`
-2. Execute tests related with user `python manage.py test user.tests`
-3. Execute tests related with cryptocurrency portfolio service `python manage.py test crypto_service.tests`
+Follow listed steps to execute tests (development server must be running):
+1. Open second window in terminal.
+2. Check running containers id's `docker ps`
+3. Enter application container `docker exec -it <container_id> /bin/bash`
+4. Go to main project folder `cd crypto_portfolio_service_REST_API`
+5. Execute tests related with user `python manage.py test user.tests`
+6. Execute tests related with cryptocurrency portfolio service `python manage.py test crypto_service.tests`
 
 ## Main functionalities
 
