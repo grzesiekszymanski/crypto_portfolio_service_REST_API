@@ -3,8 +3,7 @@
    # Set vagrant box
    config.vm.box = "ubuntu/focal64"
 
-   # Create a private network, which allows host-only access to the machine
-   # using a specific IP.
+   # Create a private network, which allows host-only access to the machine using a specific IP.
    config.vm.network "private_network", ip: "192.168.33.20"
 
    # Virtual machine config
@@ -22,7 +21,6 @@
      sudo apt install openjdk-11-jdk -y
      sudo apt-get install python3-pip -y
      pip install flake8
-
 
      # Jenkins installation
      sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
