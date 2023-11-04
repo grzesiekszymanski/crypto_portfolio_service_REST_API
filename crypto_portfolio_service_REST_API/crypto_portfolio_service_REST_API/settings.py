@@ -76,19 +76,19 @@ WSGI_APPLICATION = "crypto_portfolio_service_REST_API.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# Database for docker executions.
+# DB configuration for local container execution and Jenkins container execution (docker-compose.yml adjustment needed)
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "postgres",
         "USER": "postgres",
         "PASSWORD": "postgres",
-        "HOST": "db",  # set in docker-compose.yml
-        "PORT": 5432,  # default postgres port
+        "HOST": "db",   # set in docker-compose.yml
+        "PORT": 5432    # default postgres port
     }
 }
 
-# Database for local debugging and execution.
+# DB config for local debugging and execution
 # DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.postgresql",

@@ -12,6 +12,9 @@ services:
       - db
   db:
     image: postgres:13
+    ports:  # set "5432:5432" for Jenkins execution or 5432 for local run in container
+      - "5432:5432"
+    container_name: db
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
