@@ -1,0 +1,63 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '<----- Downloading repository from GitHub ----->'
+                script {
+                    checkout([$class: 'GitSCM', branches: [[name: '*/master']], userRemoteConfigs: [[url: 'https://github.com/grzesiekszymanski/crypto_portfolio_service_REST_API']]])
+                }
+            }
+        }
+
+        stage('Requirements installation') {
+            steps {
+                echo '<----- Requirements installation ----->'
+                sh 'pip install -r requirements.txt'
+            }
+        }
+
+        stage('Code analysis') {
+            steps {
+                echo '<----- Code analysis ----->'
+                sh 'flake8 . --ignore=F401,E127,W503,W504,E126,E999'
+            }
+        }
+
+        stage('Run app in docker container') {
+            steps  {
+                echo '<----- Run app in docker container ----->'
+                sh 'sudo docker compose down -v'
+                sh 'sudo docker build .'
+
+                // Run containers in background
+                sh 'sudo docker compose up -d'
+
+                // Wait until Django server is ready
+                sh 'while ! nc -z localhost 8000; do sleep 1; done'
+                echo 'Django server is running!'
+
+                echo 'AVAILABLE CONTAINERS:'
+                sh 'sudo docker ps'
+            }
+        }
+
+        stage('Execute user related tests') {
+            steps {
+                echo '<----- Execute users related tests ----->'
+
+                // Enter 'web' container and run bash shell inside
+                sh 'sudo docker exec db /bin/bash'
+                sh 'python3 crypto_portfolio_service_REST_API/manage.py test user.tests'
+            }
+        }
+
+        stage('Post actions') {
+            steps {
+                echo '<----- Post actions ----->'
+                sh 'sudo docker compose down -v'
+            }
+        }
+    }
+}
