@@ -63,6 +63,9 @@ Follow listed steps to run Jenkins pipeline:
 4. Connect with Jenkins using browser and configured internal network IP and Jenkins port, for example `192.168.33.20:8080`
 5. Create pipeline using content of `ci/Jenkinsfile`
 
+![image](https://github.com/grzesiekszymanski/crypto_portfolio_service_REST_API/assets/80125719/bd1325cd-86d2-423d-9fe1-1a1f80d9022f)
+
+
 
 ## Main functionalities
 
