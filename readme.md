@@ -2,7 +2,8 @@
 1. [Project description](#project-description)
 2. [Technologies and tools](#technologies-and-tools)
 3. [Run project and tests](#run-project-and-tests)
-4. [Main functionalities](#main-functionalities)
+4. [Run Jenkins pipeline](#run-jenkins-pipeline)
+5. [Main functionalities](#main-functionalities)
 
 
 ## Project description
@@ -19,8 +20,10 @@ All users, cryptocurrencies and portfolios objects are stored in PostgreSQL data
 - Django
 - Django Rest Framework
 - DRF Spectacular
-- PostgreSQL
 - Docker
+- Jenkins
+- Vagrant
+- PostgreSQL
 - PyCoinGecko
 - PreCommit
 - Flake8
@@ -41,6 +44,25 @@ Follow listed steps to execute tests (development server must be running):
 4. Go to main project folder `cd crypto_portfolio_service_REST_API`
 5. Execute tests related with user `python manage.py test user.tests`
 6. Execute tests related with cryptocurrency portfolio service `python manage.py test crypto_service.tests`
+
+
+## Run Jenkins pipeline
+
+Content of Jenkins pipeline:
+1. Clone project from GitHub
+2. Requirements installation
+3. Code analysis by Flake8
+4. Run app in Docker container
+5. Execute tests
+6. Cleanup
+
+Follow listed steps to run Jenkins pipeline:
+1. Automatically install and configure virtual machine using **ci/Vagrantfile** `vagrant up`
+2. Connect with created virtual machine using ssh `vagrant ssh`
+3. Change Jenkins privileges - add `jenkins ALL=(ALL) NOPASSWD: ALL` at the end of `/etc/sudoers` file
+4. Connect with Jenkins using browser and configured internal network IP and Jenkins port, for example `192.168.33.20:8080`
+5. Create pipeline using content of `ci/Jenkinsfile`
+
 
 ## Main functionalities
 
